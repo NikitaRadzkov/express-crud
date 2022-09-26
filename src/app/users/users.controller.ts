@@ -1,11 +1,12 @@
-import Controller from '../../interfaces/controller.interface';
 import * as express from 'express';
+import UserNotFoundException from '../../exceptions/user-not-found.exception';
+import Controller from '../../interfaces/controller.interface';
 import usersModel from './user.model';
 
 class UsersController implements Controller {
   path = '/users';
   router = express.Router();
-  private users = usersModel;
+  user = usersModel;
 
   constructor() {
     this.initializeRoutes();
@@ -14,67 +15,27 @@ class UsersController implements Controller {
   private initializeRoutes() {
     this.router.get(this.path, this.getAllUsers);
     this.router.get(`${this.path}/:id`, this.getUserById);
-    this.router.delete(`${this.path}/:id`, this.deleteUser);
-    this.router.post(this.path, this.createUser);
   }
 
-  private async getAllUsers(req: express.Request, res: express.Response) {
-    try {
-      const users = await this.users.find();
-      res.send(users);
-    } catch (e) {
-      res.status(500).json(e);
+  private getAllUsers = async (request: express.Request, response: express.Response) => {
+    const users = await this.user.find();
+    const convertUsers = users.map((user) => {
+      user.password = undefined;
+      return user;
+    });
+    response.send(convertUsers);
+  };
+
+  private getUserById = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
+    const id = request.params.id;
+    const user = await this.user.findById(id);
+    if (user) {
+      user.password = undefined;
+      response.send(user);
+    } else {
+      next(new UserNotFoundException(id));
     }
-  }
-
-  private async getUserById(req: express.Request, res: express.Response) {
-    try {
-      const id = req.params.id;
-      if (!id) {
-        res.status(404).json(`User with ID: ${id} not found`);
-      }
-      const post = await this.users.findById(id);
-      res.send(post);
-    } catch (e) {
-      res.status(500).json(e);
-    }
-  }
-
-  private async createUser(req: express.Request, res: express.Response) {
-    try {
-      const userData = req.body;
-      const createdUser = new this.users(userData);
-      await createdUser.save();
-      res.send(createdUser);
-    } catch (e) {
-      res.status(500).json(e);
-    }
-  }
-
-  private async deleteUser(req: express.Request, res: express.Response) {
-    try {
-      const id = req.params.id;
-      if (!id) {
-        res.status(404).json(`User with ID: ${id} not found`);
-      }
-      await this.users.findByIdAndDelete(id);
-      res.status(200);
-    } catch (e) {
-      res.status(500).json(e);
-    }
-  }
-
-  // async createUser() {
-  //   this.router.post('/', async (req, res) => {
-  //     try {
-  //       const { email, password } = req.body;
-  //       const user = await Users.create({ email, password });
-  //       res.json(user);
-  //     } catch (e) {
-  //       res.status(500).json(e);
-  //     }
-  //   });
-  // }
+  };
 }
 
 export default UsersController;
