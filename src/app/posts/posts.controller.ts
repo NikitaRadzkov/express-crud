@@ -3,8 +3,8 @@ import validationMiddleware from '../../middleware/validation.middleware';
 import PostNotFoundException from '../../exceptions/post-not-found.exception';
 import Controller from '../../interfaces/controller.interface';
 import CreatePostDto from './post.dto';
-import Post from './posts.interface';
-import postModel from './posts.model';
+import Post from './post.interface';
+import postModel from './post.model';
 
 class PostsController implements Controller {
   path = '/posts';

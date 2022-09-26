@@ -1,6 +1,6 @@
 import Controller from '../../interfaces/controller.interface';
 import * as express from 'express';
-import usersModel from './users.model';
+import usersModel from './user.model';
 
 class UsersController implements Controller {
   path = '/users';
