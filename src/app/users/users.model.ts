@@ -1,13 +1,10 @@
 import mongoose from 'mongoose';
-
-interface User {
-  email: string;
-  password: string;
-}
+import User from './user.interface';
 
 const UsersSchema = new mongoose.Schema({
-  email: { type: String, require: true },
-  password: { type: String, require: true },
+  name: String,
+  email: String,
+  password: String,
 });
 
 const usersModel = mongoose.model<User & mongoose.Document>('Users', UsersSchema);
