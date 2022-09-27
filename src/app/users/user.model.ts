@@ -2,13 +2,13 @@ import mongoose from 'mongoose';
 import AddressSchema from './address.schema';
 import User from './user.interface';
 
-const UsersSchema = new mongoose.Schema({
+const UserSchema = new mongoose.Schema({
   address: AddressSchema,
   name: String,
   email: String,
   password: String,
 });
 
-const usersModel = mongoose.model<User & mongoose.Document>('Users', UsersSchema);
+const userModel = mongoose.model<User & mongoose.Document>('User', UserSchema);
 
-export default usersModel;
+export default userModel;
