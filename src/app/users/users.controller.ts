@@ -1,12 +1,16 @@
 import * as express from 'express';
+import NotAuthorizedException from '../../exceptions/not-authorized.exception';
+import { authMiddleware } from '../../middleware/auth.middleware';
 import UserNotFoundException from '../../exceptions/user-not-found.exception';
 import Controller from '../../interfaces/controller.interface';
+import postModel from '../posts/post.model';
 import usersModel from './user.model';
 
 class UsersController implements Controller {
   path = '/users';
   router = express.Router();
   user = usersModel;
+  post = postModel;
 
   constructor() {
     this.initializeRoutes();
@@ -15,6 +19,7 @@ class UsersController implements Controller {
   private initializeRoutes() {
     this.router.get(this.path, this.getAllUsers);
     this.router.get(`${this.path}/:id`, this.getUserById);
+    this.router.get(`${this.path}/:id/posts`, authMiddleware, this.getAllPostsOfUser);
   }
 
   private getAllUsers = async (request: express.Request, response: express.Response) => {
@@ -35,6 +40,19 @@ class UsersController implements Controller {
     } else {
       next(new UserNotFoundException(id));
     }
+  };
+
+  private getAllPostsOfUser = async (
+    request: express.Request,
+    response: express.Response,
+    next: express.NextFunction,
+  ) => {
+    const userId = request.params.id;
+    if (userId === request.user._id.toString()) {
+      const posts = await this.post.find({ author: userId });
+      response.send(posts);
+    }
+    next(new NotAuthorizedException());
   };
 }
 
