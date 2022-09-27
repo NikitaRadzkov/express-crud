@@ -6,11 +6,13 @@ import CreatePostDto from './create-post.dto';
 import Post from './post.interface';
 import postModel from './post.model';
 import { authMiddleware } from '../../middleware/auth.middleware';
+import userModel from '../users/user.model';
 
 class PostsController implements Controller {
   path = '/posts';
   router = express.Router();
   private post = postModel;
+  private user = userModel;
 
   constructor() {
     this.initializeRoutes();
@@ -60,8 +62,12 @@ class PostsController implements Controller {
       ...postData,
       authorId: request.user._id,
     });
+    const user = await this.user.findById(request.user._id);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    user!.posts = [...(user!.posts, createdPost._id)];
+    await user?.save();
     const savedPost = await createdPost.save();
-    await savedPost.populate('author');
+    await savedPost.populate('authors', '-password');
     response.send(savedPost);
   };
 

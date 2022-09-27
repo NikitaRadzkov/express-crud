@@ -15,7 +15,7 @@ import DataStoredInToken from '../../interfaces/data-stored-in-token';
 class AuthenticationController implements Controller {
   path = '/auth';
   router = express.Router();
-  user = usersModel;
+  private user = usersModel;
 
   constructor() {
     this.initializeRoutes();
