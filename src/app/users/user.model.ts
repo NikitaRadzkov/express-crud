@@ -1,7 +1,9 @@
 import mongoose from 'mongoose';
+import AddressSchema from './address.schema';
 import User from './user.interface';
 
 const UsersSchema = new mongoose.Schema({
+  address: AddressSchema,
   name: String,
   email: String,
   password: String,
