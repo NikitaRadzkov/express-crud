@@ -24,6 +24,7 @@ class AuthenticationController implements Controller {
   private initializeRoutes() {
     this.router.post(`${this.path}/registration`, validationMiddleware(CreateUserDto), this.registration);
     this.router.post(`${this.path}/login`, validationMiddleware(LoginDto), this.login);
+    this.router.post(`${this.path}/logout`, this.logout);
   }
 
   private createToken(user: User): TokenData {
@@ -71,6 +72,11 @@ class AuthenticationController implements Controller {
     } else {
       next(new WrongCredentials());
     }
+  };
+
+  private logout = (request: express.Request, response: express.Response) => {
+    response.setHeader('Set-Cookie', ['Authorization=;Max-age=0']);
+    response.send(200);
   };
 }
 

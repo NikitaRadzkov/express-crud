@@ -2,9 +2,10 @@ import * as express from 'express';
 import validationMiddleware from '../../middleware/validation.middleware';
 import PostNotFoundException from '../../exceptions/post-not-found.exception';
 import Controller from '../../interfaces/controller.interface';
-import CreatePostDto from './post.dto';
+import CreatePostDto from './create-post.dto';
 import Post from './post.interface';
 import postModel from './post.model';
+import { authMiddleware } from '../../middleware/auth.middleware';
 
 class PostsController implements Controller {
   path = '/posts';
@@ -18,9 +19,11 @@ class PostsController implements Controller {
   private initializeRoutes() {
     this.router.get(this.path, this.getAllPosts);
     this.router.get(`${this.path}/:id`, this.getPostById);
-    this.router.patch(`${this.path}/:id`, validationMiddleware(CreatePostDto, true), this.modifyPost);
-    this.router.delete(`${this.path}/:id`, this.deletePost);
-    this.router.post(this.path, validationMiddleware(CreatePostDto), this.createPost);
+    this.router
+      .all(`${this.path}/*`, authMiddleware)
+      .patch(`${this.path}/:id`, validationMiddleware(CreatePostDto, true), this.modifyPost)
+      .delete(`${this.path}/:id`, this.deletePost)
+      .post(this.path, validationMiddleware(CreatePostDto), this.createPost);
   }
 
   private getAllPosts = (request: express.Request, response: express.Response) => {
@@ -53,8 +56,11 @@ class PostsController implements Controller {
   };
 
   private createPost = (request: express.Request, response: express.Response) => {
-    const postData: Post = request.body;
-    const createdPost = new this.post(postData);
+    const postData: CreatePostDto = request.body;
+    const createdPost = new this.post({
+      ...postData,
+      authorId: request.user._id,
+    });
     createdPost.save().then((savedPost) => {
       response.send(savedPost);
     });
