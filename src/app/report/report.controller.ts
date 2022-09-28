@@ -15,7 +15,7 @@ class ReportController implements Controller {
     this.router.get(`${this.path}`, this.generateReport);
   }
 
-  private generateReport = async (request: express.Request, response: express.Response) => {
+  private async generateReport(req: express.Request, res: express.Response) {
     const usersByCountries = await this.user.aggregate([
       {
         $match: {
@@ -61,8 +61,8 @@ class ReportController implements Controller {
         },
       },
     ]);
-    response.send({ usersByCountries });
-  };
+    res.send({ usersByCountries });
+  }
 }
 
 export default ReportController;

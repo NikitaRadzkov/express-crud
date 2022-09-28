@@ -28,59 +28,56 @@ class PostsController implements Controller {
       .post(this.path, validationMiddleware(CreatePostDto), this.createPost);
   }
 
-  private getAllPosts = async (request: express.Request, response: express.Response) => {
+  private async getAllPosts(req: express.Request, res: express.Response) {
     const posts = await this.post.find().populate('author', '-password');
-    response.send(posts);
-  };
+    res.send(posts);
+  }
 
-  private getPostById = (request: express.Request, response: express.Response, next: express.NextFunction) => {
-    const id = request.params.id;
-    this.post.findById(id).then((post) => {
-      if (post) {
-        response.send(post);
-      } else {
-        next(new PostNotFoundException(id));
-      }
-    });
-  };
+  private async getPostById(req: express.Request, res: express.Response, next: express.NextFunction) {
+    const id = req.params.id;
+    const post = await this.post.findById(id);
+    if (post) {
+      res.send(post);
+    } else {
+      next(new PostNotFoundException(id));
+    }
+  }
 
-  private modifyPost = (request: express.Request, response: express.Response, next: express.NextFunction) => {
-    const id = request.params.id;
-    const postData: Post = request.body;
-    this.post.findByIdAndUpdate(id, postData, { new: true }).then((post) => {
-      if (post) {
-        response.send(post);
-      } else {
-        next(new PostNotFoundException(id));
-      }
-    });
-  };
+  private async modifyPost(req: express.Request, res: express.Response, next: express.NextFunction) {
+    const id = req.params.id;
+    const postData: Post = req.body;
+    const post = await this.post.findByIdAndUpdate(id, postData, { new: true });
+    if (post) {
+      res.send(post);
+    } else {
+      next(new PostNotFoundException(id));
+    }
+  }
 
-  private createPost = async (request: express.Request, response: express.Response) => {
-    const postData: CreatePostDto = request.body;
+  private async createPost(req: express.Request, res: express.Response) {
+    const postData: CreatePostDto = req.body;
     const createdPost = new this.post({
       ...postData,
-      authorId: request.user._id,
+      authorId: req.user._id,
     });
-    const user = await this.user.findById(request.user._id);
+    const user = await this.user.findById(req.user._id);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     user!.posts = [...(user!.posts, createdPost._id)];
     await user?.save();
     const savedPost = await createdPost.save();
     await savedPost.populate('authors', '-password');
-    response.send(savedPost);
-  };
+    res.send(savedPost);
+  }
 
-  private deletePost = (request: express.Request, response: express.Response, next: express.NextFunction) => {
-    const id = request.params.id;
-    this.post.findByIdAndDelete(id).then((successResponse) => {
-      if (successResponse) {
-        response.send(200);
-      } else {
-        next(new PostNotFoundException(id));
-      }
-    });
-  };
+  private async deletePost(req: express.Request, res: express.Response, next: express.NextFunction) {
+    const id = req.params.id;
+    const successResponse = await this.post.findByIdAndDelete(id);
+    if (successResponse) {
+      res.send(200);
+    } else {
+      next(new PostNotFoundException(id));
+    }
+  }
 }
 
 export default PostsController;

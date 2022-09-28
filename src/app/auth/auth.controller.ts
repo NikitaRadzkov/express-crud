@@ -41,8 +41,8 @@ class AuthenticationController implements Controller {
     return `Authorization=${tokenData.token}; HttpOnly; Max-Age=${tokenData.expiresIn}`;
   }
 
-  private registration = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
-    const userData: CreateUserDto = request.body;
+  private async registration(req: express.Request, res: express.Response, next: express.NextFunction) {
+    const userData: CreateUserDto = req.body;
     if (await this.user.findOne({ email: userData.email })) {
       next(new SameDataException(userData.email));
     } else {
@@ -50,13 +50,13 @@ class AuthenticationController implements Controller {
       const user = await this.user.create({ ...userData, password: hashedPassword });
       user.password = undefined;
       const tokenData = this.createToken(user);
-      response.setHeader('Set-Cookie', [this.createCookie(tokenData)]);
-      response.send(user);
+      res.setHeader('Set-Cookie', [this.createCookie(tokenData)]);
+      res.send(user);
     }
-  };
+  }
 
-  private login = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
-    const loginData: LoginDto = request.body;
+  private async login(req: express.Request, res: express.Response, next: express.NextFunction) {
+    const loginData: LoginDto = req.body;
     const user = await this.user.findOne({ email: loginData.email });
     if (user) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -64,20 +64,20 @@ class AuthenticationController implements Controller {
       if (isPasswordMatching) {
         user.password = undefined;
         const tokenData = this.createToken(user);
-        response.setHeader('Set-Cookie', [this.createCookie(tokenData)]);
-        response.send(user);
+        res.setHeader('Set-Cookie', [this.createCookie(tokenData)]);
+        res.send(user);
       } else {
         next(new WrongCredentials());
       }
     } else {
       next(new WrongCredentials());
     }
-  };
+  }
 
-  private logout = (request: express.Request, response: express.Response) => {
-    response.setHeader('Set-Cookie', ['Authorization=;Max-age=0']);
-    response.send(200);
-  };
+  private logout(req: express.Request, res: express.Response) {
+    res.setHeader('Set-Cookie', ['Authorization=;Max-age=0']);
+    res.send(200);
+  }
 }
 
 export default AuthenticationController;
